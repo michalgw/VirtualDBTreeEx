@@ -208,7 +208,7 @@ Uses
   Messages,
   DB,
   Variants,
-  VirtualTrees, ImgList;
+  Laz.VirtualTrees, ImgList;
 
   // Données qui permettent de créer les checks sur les branches à partir du champ CheckFieldName
 Const RulerActionSelectAndAction = 0 ;
@@ -403,7 +403,7 @@ Type
     FOnReadPathFromDB: TVTPathToDBEvent;
     FOnWritePathToDB: TVTPathToDBEvent;
     FOnWritingDataSet: TVTDBWriteQueryEvent;
-    FParentField: TFields;
+    FParentField: TList;
     FParentFieldName: String;
     STLParentFields : TStringList ;
     FPathField: TField;
@@ -565,7 +565,7 @@ Type
     Property LevelField: TField Read FLevelField;
     Property OnNodeDataChanged: TVTNodeDataChangedEvent Read FOnNodeDataChanged Write FOnNodeDataChanged;
     Property OnReadNodeFromDB: TVTNodeFromDBEvent Read FOnReadNodeFromDB Write FOnReadNodeFromDB;
-    Property ParentField: TFields Read FParentField;
+    Property ParentField: TList Read FParentField;
     Property PathField: TField Read FPathField;
     Property ViewField: TField Read FViewField;
     Property ImgIdxField: TField Read FImgIdxField;
@@ -978,6 +978,8 @@ Destructor TBaseVirtualDBTreeEx.Destroy;
 Begin
   STLParentFields.Free ;
   FDataLink.Free;
+  if Assigned(FParentField) then
+    FParentField.Free;
   Inherited;
 End;
 
@@ -1020,7 +1022,10 @@ var li_i : Integer ;
 Begin
   if FDataLink.Active And (FParentFieldName <> '') Then
      Begin
-       FParentField := TFields.Create(FDataLink.DataSet);
+       if Assigned(FParentField) then
+         FParentField.Clear
+       else
+         FParentField := TList.Create;
        if pos ( ';', FParentFieldName ) = 0 Then
          Begin
            FParentField.Add ( FDataLink.DataSet.FieldByName(FParentFieldName));
@@ -1039,7 +1044,8 @@ var CreateFields : Boolean ;
 Begin
   If (FParentFieldName <> Value) Then Begin
     FParentFieldName := Value;
-    FParentField := Nil;
+    if Assigned(FParentField) then
+      FreeAndNil(FParentField);
     STLParentFields.Free;
     STLParentFields := nil ;
     CreateFields := False;
@@ -1331,18 +1337,18 @@ Var
   Found : Boolean;
 Begin
  if STLParentFields = nil Then
-   FParentField.Fields [ 0 ].Value := ParentID
+    TField(FParentField.Items[ 0 ]).Value := ParentID
   Else
    Begin
     Found := False ;
     for i := 0 to STLParentFields.Count - 1 do
-     if ( FParentField.Fields [ i ].IsNull ) Then
+     if TField(FParentField.Items[ i ]).IsNull Then
        Begin
-         FParentField.Fields [ i ].Value := ParentID;
+         TField(FParentField.Items[ i ]).Value := ParentID;
          Found := True ;
        End;
      if not Found Then
-       FParentField.Fields [ 0 ].Value := ParentID;
+       TField(FParentField.Items[ 0 ]).Value := ParentID;
    End;
 End;
 
@@ -1354,14 +1360,14 @@ Begin
  if STLParentFields = nil Then
    Begin
      if Last < 0 Then
-       Result := FParentField.Fields [ 0 ];
+       Result := TField(FParentField.Items[ 0 ]);
    End
   Else
    Begin
     for i := Last + 1 to STLParentFields.Count - 1 do
-     if not FParentField.Fields [ i ].IsNull Then
+     if not TField(FParentField.Items[ i ]).IsNull Then
       Begin
-        Result := FParentField.Fields [ i ];
+        Result := TField(FParentField.Items[ i ]);
       End;
    End;
 End;
@@ -1954,7 +1960,8 @@ End;
 Procedure TBaseVirtualDBTreeEx.ResetFields;
 Begin
   FKeyField := Nil;
-  FParentField := Nil;
+  if Assigned(FParentField) then
+    FreeAndNil(FParentField);
   FPathField := Nil;
   FLevelField := Nil;
   FViewField := Nil;
@@ -2928,10 +2935,10 @@ Begin
       if (((dboPathStructure In FDBOptions) Or (dboWriteSecondary In FDBOptions)) And Assigned(FPathField) And FPathField.CanModify) Or (((dboParentStructure In FDBOptions) Or (dboWriteSecondary In FDBOptions)) And Assigned(FParentField) ) Then
         Begin
           if STLParentFields = nil  then
-           Result := FParentField.Fields [ 0 ].CanModify
+           Result := TField(FParentField.Items[ 0 ]).CanModify
           Else
            for i := 0 to STLParentFields.Count - 1 do
-             if FParentField.Fields [ i ].CanModify then
+             if TField(FParentField.Items[ i ]).CanModify then
                Result := True;
         End;
       If Result And (dboWriteLevel In FDBOptions) Then Result := Assigned(FLevelField) And FLevelField.CanModify;
@@ -3957,4 +3964,4 @@ initialization
   {$i virtualdbtreeex.lrs}
 {$ENDIF}
 
-End.
+End.

@@ -62,7 +62,7 @@ uses
     Windows,
   {$ENDIF}
   Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  VirtualDBTreeEx, VirtualTrees, StdCtrls, Comctrls;
+  VirtualDBTreeEx, Laz.VirtualTrees, StdCtrls, Comctrls;
 
 type
   { This TVirtualStringTree Descendant allows one to

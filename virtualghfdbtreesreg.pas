@@ -13,7 +13,7 @@ uses
     Windows,
   {$ENDIF}
   Classes,
-  virtualtrees, VTHeaderPopup;
+  Laz.virtualtrees, Laz.VTHeaderPopup;
 
 
 procedure Register;
