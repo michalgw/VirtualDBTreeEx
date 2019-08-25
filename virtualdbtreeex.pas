@@ -914,7 +914,7 @@ End;
 
 Procedure TVirtualDBTreeExDataLink.ActiveChanged;
 Begin
-  if (  Dataset.Active )
+  if ( Assigned(Dataset) and Dataset.Active )
   and assigned ( Dataset.AfterOpen )
     Then Dataset.AfterOpen ( Dataset );
   FVirtualDBTreeEx.DataLinkActiveChanged ;
